@@ -3,81 +3,10 @@
 #include <assert.h>
 #include <time.h>
 
-unsigned int * arr_init() {
-	int i;
-
-	unsigned int * arr;
-	
-	arr = calloc(48, sizeof(unsigned int));		//48 - максимальное число фибоначи,которое влезает в unsigned
-	
-	arr[0] = 0;
-	arr[1] = 1;
-	for(i = 2; i < 48; i++){
-		arr[i] = arr[i-1] + arr[i-2];
-	}
-	return arr;
-}
-
-
-unsigned int fib_part (unsigned int * arr, unsigned x) {	// const unsigned int*
-	unsigned res = 0;
-	
-	int i;
-
-	
-	for(i = 47; i > 1;i--){
-		if( x / arr[i]){
-			x -= arr[i];
-			res++;
-		} 
-			res = res * 2;
-	}
-	
-	return res / 2 ;
-}
-
-
-int next_turn(unsigned int * arr, int total, int possible) {	// const unsigned int*
-	int res;
-	if(possible >= total)
-		res = total;
-	else {
-		unsigned part = 0;
-		
-		int i;
-		int min_i = 0;
-		
-		for(i = 47; i > 1;i--){
-			if( total / arr[i]){
-				min_i = i;
-				total -= arr[i];
-				part++;
-			} 
-				part = part * 2;
-		}
-		part = part / 2;
-		
-		if((unsigned)possible >= arr[min_i])
-			res = arr[min_i];
-		else
-			res = 1;
-		
-	}
-	
-	
-	return res;	
-}
-
-int rand_next_turn(int total, int possible) {
-	srand(time(NULL));
-	int res;
-	if(possible >= total)
-		res = total;
-	else {
-		res = rand() % possible + 1;
-	}
-	return res;
-}
+unsigned int * arr_init();
+unsigned long int fib_part (unsigned int * arr, unsigned x);
+int next_turn(unsigned int * arr, int total, int possible);
+int rand_next_turn(int total, int possible);
 
 
 int main() {
@@ -127,4 +56,75 @@ int main() {
 
 	free(fib_arr);
 	return 0;
+}
+
+unsigned int * arr_init() {
+	int i;
+
+	unsigned int * arr;
+	
+	arr = calloc(48, sizeof(unsigned int));		//48 - максимальное число фибоначи,которое влезает в unsigned
+	
+	arr[0] = 0;
+	arr[1] = 1;
+	for(i = 2; i < 48; i++){
+		arr[i] = arr[i-1] + arr[i-2];
+	}
+	return arr;
+}
+
+
+unsigned long int fib_part (unsigned int * arr, unsigned x) {	// const unsigned int*
+	unsigned long res = 0;
+	
+	int i;
+
+	
+	for(i = 47; i > 1;i--){
+		if( x / arr[i]){
+			x -= arr[i];
+			res++;
+		} 
+			res = res * 2;
+	}
+	
+	return res;
+}
+
+
+int next_turn(unsigned int * arr, int total, int possible) {	// const unsigned int*
+	int res;
+	if(possible >= total)
+		res = total;
+	else {
+		
+		unsigned long int i = fib_part(arr, total);
+
+		int min_i = 0;
+
+		for (min_i = 0; i % 2 != 1; min_i++){
+			i = i / 2;
+		}
+		min_i++;
+		
+		if((unsigned)possible >= arr[min_i])
+			res = arr[min_i];
+		else
+			res = 1;
+		
+	}
+	
+	
+	return res;	
+}
+
+int rand_next_turn(int total, int possible) {
+	srand(time(NULL));
+	int res;
+	if(possible >= total)
+		res = total;
+	else {
+		res = rand() % possible + 1;
+	}
+	return res;
 }
