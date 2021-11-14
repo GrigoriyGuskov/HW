@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-
+#include <time.h>
 
 int is_circle(int *arr1, int *arr2, int n);
 
@@ -17,9 +17,90 @@ int is_correct(int *arr, int n);
 
 int * copy(int *arr, int n);
 
+void swap(int * arr, int i, int j);
+
+int NextSet(int *arr, int n);
+
 int main() {
+	int start, end;
+	start = time(NULL);
 	
+	int n;
+	
+	int res = scanf("%d", &n);
+	assert(res == 1);
+	
+	int N = 0;
+	int ** arrarr = NULL;
+	int * arr = calloc(2 * n, sizeof(int));
+	int * a;
+	for(int i = 0; i < 2 * n; i++)
+		arr[i] = i + 1;
+
+	for(; res; ) {
+		if(is_correct(arr, n)){
+			a = copy(arr, n);
+			norm(a, n);
+			int f = 0;
+			for(int i = 0; i < N; i++) {
+				if(is_equal(arrarr[i], a, n))
+					f = 1;
+			}
+				
+			if(f == 0) {
+				N++;
+				arrarr = realloc(arrarr, N * sizeof(int*));
+				arrarr[N - 1] = copy(a, n);
+			}
+			free(a);
+		}
+		res = NextSet(arr, n);
+	}
+	
+	for(int i = 0; i < N; i++) {
+		print(arrarr[i], n);
+	}
+	free(arr);
+	for(int i = 0; i < N; i++)
+		free(arrarr[i]);
+	free(arrarr);
+	
+	end = time(NULL);
+	printf("%d\n", end - start);
 	return 0;
+}
+
+int NextSet(int *arr, int n) {
+	n = 2 * n;
+	int j = n - 2;
+	for(; j != -1 && arr[j] >= arr[j + 1]; j--);
+
+	if (j == -1)
+		return 0;
+	
+	int k = n - 1;
+	for(; arr[j] >= arr[k]; k--);
+	
+	swap(arr, j, k);
+	int l = j + 1;
+	int r = n - 1;
+	for(; l < r; l++, r--)
+		swap(arr, l, r);
+
+	return 1;
+}
+
+
+void swap(int * arr, int i, int j) {
+	assert(arr != NULL);
+	assert(i >= 0);
+	assert(j >= 0);
+	
+	if(i != j) {
+		int c = arr[i];
+		arr[i] = arr[j];
+		arr[j] = c;
+	}
 }
 
 int is_equal(int *arr1, int *arr2, int n) {
@@ -42,7 +123,7 @@ int is_correct(int *arr, int n) {
 			if(i != j && arr[i] == arr[j])
 				return 0;
 	
-	for(int i = n; i < 2 * n; i++)
+	for(int i = n; i < 2 * n - 1; i++)
 		if(arr[i] + arr[i - n] + arr[(i - n + 1) % n] != arr[(i + 1) % n + n] + arr[(i + 1 - n) % n] + arr[(i + 1 - n + 1) % n])
 			return 0;
 	return 1;
@@ -89,13 +170,13 @@ int * copy(int *arr, int n) {
 	assert(arr != NULL);
 	assert(n > 2);
 	
-	int * res = calloc(2 * n, sizeof(int));
+	int * ret = calloc(2 * n, sizeof(int));
 	
-	assert(res != NULL);
+	assert(ret != NULL);
 	
 	for(int i = 0; i < 2 * n; i++)
-		res[i] = arr[i];
-	return res;
+		ret[i] = arr[i];
+	return ret;
 }
 
 void print(int *arr, int n) {
