@@ -15,10 +15,10 @@ void print(int *arr, int n);
 
 int is_correct(int *arr, int n);
 
+int * copy(int *arr, int n);
+
 int main() {
-	int arr[] = {3,2,1,4,6,5};
-	print(arr, 3);
-	printf("%d\n", is_correct(arr, 3));
+	
 	return 0;
 }
 
@@ -83,6 +83,19 @@ int is_circle(int *arr1, int *arr2, int n) {
 	norm(arr1, n);
 	norm(arr2, n);
 	return is_equal(arr1, arr2, n);
+}
+
+int * copy(int *arr, int n) {
+	assert(arr != NULL);
+	assert(n > 2);
+	
+	int * res = calloc(2 * n, sizeof(int));
+	
+	assert(res != NULL);
+	
+	for(int i = 0; i < 2 * n; i++)
+		res[i] = arr[i];
+	return res;
 }
 
 void print(int *arr, int n) {
