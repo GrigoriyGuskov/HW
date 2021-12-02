@@ -1,7 +1,29 @@
+//-----------------------------------------------------------------------------------------
+// Программа принимает на стандартный ввод n - количество троек в фигуре
+// Затем перебирает все возможные перестановки и печатает, отсортировав лексикографически
+// (Сложность перебора 2n!)
+// 
+// Пример для n = 3:
+//		4
+//		 \
+//		  3
+//		 / \
+//		1---2--6
+//	   /
+//	  5
+//-----------------------------------------------------------------------------------------
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <time.h>
+
+typedef struct {
+	int N;
+	int size;
+	int ** arrarr;
+}Answers;
 
 int is_circle(int *arr1, int *arr2, int n);
 
@@ -21,53 +43,109 @@ void swap(int * arr, int i, int j);
 
 int NextSet(int *arr, int n);
 
+Answers * ans_init();
+
+void ans_free(Answers * pa);
+
+void resize(Answers * pa);
+
+void enumer(int n, Answers * pa);
+
+int cmp_n(const void * a, const void * b, void * size);
+
+int cmp(int a, int b);
+
 int main() {
-	int start, end;
-	start = time(NULL);
 	
 	int n;
 	
 	int res = scanf("%d", &n);
 	assert(res == 1);
 	
-	int N = 0;
-	int ** arrarr = NULL;
+	int start, end;
+	start = time(NULL);
+	
+	Answers * pa;
+	
+	pa = ans_init();
+	
+	enumer(n, pa);
+	
+	//sort
+	qsort_r(pa->arrarr, pa->size, sizeof(int*), cmp_n, (void*)&n);
+	
+	for(int i = 0; i < pa->size; i++) {
+		print((pa->arrarr)[i], n);
+	}
+
+	ans_free(pa);
+	
+	end = time(NULL);
+	printf("%d\n", end - start);
+	return 0;
+}
+
+Answers * ans_init() {
+	Answers * ret = calloc(1, sizeof(Answers));
+	ret->arrarr = NULL;
+	ret->N = 0;
+	ret->size = 0;
+	return ret;
+}
+
+void ans_free(Answers * pa){
+	for(int i = 0; i < pa->size; i++)
+		free((pa->arrarr)[i]);
+	free((pa->arrarr));
+	free(pa);
+}
+
+
+void resize(Answers * pa) {
+	assert(pa != NULL);
+	
+	if(pa->size > pa->N){
+		pa->N = pa->N * 2;
+		if(pa->N == 0)
+			pa->N = 1;
+		(pa->arrarr) = realloc((pa->arrarr), pa->N * sizeof(int*));
+	}
+}
+
+
+void enumer(int n, Answers * pa) {
+	assert(pa != NULL);
+	assert(n > 2);
+	
+	int * a = NULL;
 	int * arr = calloc(2 * n, sizeof(int));
-	int * a;
 	for(int i = 0; i < 2 * n; i++)
 		arr[i] = i + 1;
-
+	
+	int res = 1;
 	for(; res; ) {
 		if(is_correct(arr, n)){
 			a = copy(arr, n);
 			norm(a, n);
 			int f = 0;
-			for(int i = 0; i < N; i++) {
-				if(is_equal(arrarr[i], a, n))
+			for(int i = 0; i < pa->size; i++) {
+				if(is_equal((pa->arrarr)[i], a, n))
 					f = 1;
 			}
 				
-			if(f == 0) {
-				N++;
-				arrarr = realloc(arrarr, N * sizeof(int*));
-				arrarr[N - 1] = copy(a, n);
+			if(f == 0) {//
+				pa->size = pa->size + 1;
+				resize(pa);
+				(pa->arrarr)[pa->size - 1] = copy(a, n);
 			}
 			free(a);
 		}
 		res = NextSet(arr, n);
 	}
 	
-	for(int i = 0; i < N; i++) {
-		print(arrarr[i], n);
-	}
 	free(arr);
-	for(int i = 0; i < N; i++)
-		free(arrarr[i]);
-	free(arrarr);
 	
-	end = time(NULL);
-	printf("%d\n", end - start);
-	return 0;
+
 }
 
 int NextSet(int *arr, int n) {
@@ -89,7 +167,6 @@ int NextSet(int *arr, int n) {
 
 	return 1;
 }
-
 
 void swap(int * arr, int i, int j) {
 	assert(arr != NULL);
@@ -118,13 +195,15 @@ int is_correct(int *arr, int n) {
 	assert(arr != NULL);
 	assert(n > 2);
 	
+	int sum;
+	
 	for(int i = 0; i < n; i++)
 		for(int j = 0; j < n; j++)
 			if(i != j && arr[i] == arr[j])
 				return 0;
-	
-	for(int i = n; i < 2 * n - 1; i++)
-		if(arr[i] + arr[i - n] + arr[(i - n + 1) % n] != arr[(i + 1) % n + n] + arr[(i + 1 - n) % n] + arr[(i + 1 - n + 1) % n])
+	sum = arr[n] + arr[0] + arr[1];
+	for(int i = 1; i < n; i++)
+		if(arr[n + i] + arr[i] + arr[(i + 1) % n] != sum)
 			return 0;
 	return 1;
 }
@@ -187,4 +266,31 @@ void print(int *arr, int n) {
 		printf("%d,%d,%d;", arr[i], arr[i - n], arr[(i - n + 1) % n]);
 	}
 	printf("\n");
+}
+
+int cmp_n(const void * a, const void * b, void * size) {
+	int * first = *((int**)a);
+	int * second = *((int**)b);
+	int n = *((int*)size);
+	int ret = 0;
+	for(int i = 0; i < n; i++) {
+		ret = cmp(first[n + i], second[n + i]);
+		if(ret)
+			return ret;
+		ret = cmp(first[i], second[i]);
+		if(ret)
+			return ret;
+		ret = cmp(first[(i + 1) % n], second[(i + 1) % n]);
+		if(ret)
+			return ret;
+	}
+	return ret;
+}
+
+int cmp(int a, int b) {
+	if(a < b)
+		return -1;
+	if(a > b)
+		return 1;
+	return 0;
 }
